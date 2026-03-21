@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tomato Disease Detection System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10" fill="#ff6b6b"/>
+                    <path d="M12 2C12 2 8 4 8 8C8 8 12 6 12 2Z" fill="#51cf66"/>
+                    <circle cx="9" cy="10" r="1" fill="#fff"/>
+                </svg>
+                <h1>Tomato Disease Detection</h1>
+            </div>
+            <p class="subtitle">AI-Powered Plant Health Analysis</p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="upload-section">
+                <div class="upload-card">
+                    <div class="upload-icon">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 15V3M12 3L8 7M12 3L16 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M2 17L2 19C2 20.1046 2.89543 21 4 21L20 21C21.1046 21 22 20.1046 22 19V17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <h2>Upload Tomato Leaf Image</h2>
+                    <p>Drag and drop or click to select an image</p>
+                    
+                    <input type="file" id="imageInput" accept="image/*" hidden>
+                    <button class="upload-btn" onclick="document.getElementById('imageInput').click()">
+                        Choose Image
+                    </button>
+                    
+                    <div id="imagePreview" class="image-preview" style="display: none;">
+                        <img id="previewImg" alt="Preview">
+                        <button class="remove-btn" onclick="removeImage()">×</button>
+                    </div>
+                    
+                    <button id="analyzeBtn" class="analyze-btn" style="display: none;" onclick="analyzeImage()">
+                        <span class="btn-text">Analyze Image</span>
+                        <span class="loader" style="display: none;"></span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div id="resultsSection" class="results-section" style="display: none;">
+                <div class="results-card">
+                    <div class="result-header">
+                        <h2>Analysis Results</h2>
+                        <div id="healthStatus" class="health-status"></div>
+                    </div>
+                    
+                    <div class="diagnosis">
+                        <div class="diagnosis-main">
+                            <h3>Detected Condition</h3>
+                            <div id="diseaseName" class="disease-name"></div>
+                            <div id="confidence" class="confidence"></div>
+                        </div>
+                        
+                        <div class="progress-circle" id="progressCircle">
+                            <svg class="progress-ring" width="120" height="120">
+                                <circle class="progress-ring-circle" stroke="#e9ecef" stroke-width="8" fill="transparent" r="52" cx="60" cy="60"/>
+                                <circle id="progressRingFill" class="progress-ring-fill" stroke-width="8" fill="transparent" r="52" cx="60" cy="60"/>
+                            </svg>
+                            <div class="progress-text" id="progressText">0%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-section">
+                        <div class="info-card">
+                            <h3>📋 Description</h3>
+                            <p id="diseaseDescription"></p>
+                        </div>
+                        
+                        <div class="info-card treatment-card">
+                            <h3>💊 Treatment Recommendations</h3>
+                            <p id="diseaseTreatment"></p>
+                        </div>
+                    </div>
+                    
+                    <div class="top-predictions">
+                        <h3>Alternative Possibilities</h3>
+                        <div id="topPredictions" class="predictions-list"></div>
+                    </div>
+                    
+                    <button class="new-analysis-btn" onclick="resetAnalysis()">
+                        Analyze Another Image
+                    </button>
+                </div>
+            </div>
+
+            <!-- Error Message -->
+            <div id="errorMessage" class="error-message" style="display: none;">
+                <div class="error-content">
+                    <span class="error-icon">⚠️</span>
+                    <p id="errorText"></p>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <p>Developed by Team: Tushar Jangid, Kush Sharma, Surender Singh, Vansh Sharma, Kunal Sharma</p>
+                <p class="footer-note">Using Deep Learning CNN & PlantVillage Dataset</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
