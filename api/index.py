@@ -1,9 +1,12 @@
 import os
 import sys
 
-# Add parent directory to path so app.py and assets can be imported
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# Ensure root project directory is in python path
+root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if root_dir not in sys.path:
+    sys.path.insert(0, root_dir)
 
 from app import app
 
-# Vercel looks for the 'app' or handler object
+# Vercel serverless function expects 'app' or 'handler'
+handler = app
