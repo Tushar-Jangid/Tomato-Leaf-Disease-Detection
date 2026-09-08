@@ -1,643 +1,437 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LeafScan AI — Smart Tomato Crop Health & Disease Diagnostic System</title>
-    <meta name="description" content="AI-powered tomato plant leaf disease diagnosis system with deep learning CNN model, real-time farm health analytics dashboard, and agronomic treatment encyclopedia.">
-    
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- Chart.js CDN for Analytics Dashboard -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LeafScan AI — Tomato Disease Detection</title>
+  <meta name="description" content="AI-powered tomato leaf disease detection. Upload a photo and get instant diagnosis with treatment recommendations.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <!-- App Container -->
-    <div class="app-wrapper">
-        <!-- Top Navigation Bar -->
-        <header class="navbar">
-            <div class="nav-brand">
-                <div class="brand-icon-wrapper">
-                    <svg class="brand-svg" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="16" cy="18" r="11" fill="url(#tomatoGrad)"/>
-                        <path d="M16 4C16 4 11 7 11 12C11 12 16 10 16 4Z" fill="#10B981"/>
-                        <path d="M16 4C16 4 21 7 21 12C21 12 16 10 16 4Z" fill="#059669"/>
-                        <circle cx="16" cy="6" r="2.5" fill="#34D399"/>
-                        <path d="M11 16C12.5 14 15 14 17 15" stroke="white" stroke-width="1.8" stroke-linecap="round" opacity="0.6"/>
-                        <defs>
-                            <linearGradient id="tomatoGrad" x1="6" y1="8" x2="26" y2="28" gradientUnits="userSpaceOnUse">
-                                <stop stop-color="#FF4D4D"/>
-                                <stop offset="1" stop-color="#C51616"/>
-                            </linearGradient>
-                        </defs>
-                    </svg>
-                </div>
-                <div class="brand-text">
-                    <div class="brand-title">LeafScan <span class="badge-ai">AI</span></div>
-                    <div class="brand-subtitle">Smart Crop Health & Disease Diagnostic System</div>
-                </div>
-            </div>
 
-            <!-- Navigation Tabs -->
-            <nav class="nav-tabs" role="tablist">
-                <button class="nav-tab active" data-tab="scanner-view" id="tabScannerBtn">
-                    <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 11V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6"/>
-                        <path d="M12 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/>
-                        <path d="m19 19 3 3-3-3"/>
-                        <circle cx="19" cy="19" r="2"/>
-                    </svg>
-                    <span>Leaf Scanner</span>
-                </button>
-                <button class="nav-tab" data-tab="dashboard-view" id="tabDashboardBtn">
-                    <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="3" width="7" height="9" rx="1"/>
-                        <rect x="14" y="3" width="7" height="5" rx="1"/>
-                        <rect x="14" y="12" width="7" height="9" rx="1"/>
-                        <rect x="3" y="16" width="7" height="5" rx="1"/>
-                    </svg>
-                    <span>Farm Dashboard</span>
-                    <span class="pill-counter" id="scanCountPill">0</span>
-                </button>
-                <button class="nav-tab" data-tab="encyclopedia-view" id="tabEncyclopediaBtn">
-                    <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-                        <path d="M9 7h6M9 11h4"/>
-                    </svg>
-                    <span>Disease Library</span>
-                </button>
-            </nav>
+  <!-- Animated Background Particles -->
+  <div class="bg-particles" aria-hidden="true">
+    <div class="particle p1"></div>
+    <div class="particle p2"></div>
+    <div class="particle p3"></div>
+    <div class="particle p4"></div>
+    <div class="particle p5"></div>
+  </div>
 
-            <!-- Status Indicator -->
-            <div class="nav-status">
-                <span class="status-pulse-dot"></span>
-                <span class="status-text">AI Model Active (10 Classes)</span>
-            </div>
-        </header>
-
-        <!-- MAIN VIEWPORT -->
-        <main class="main-container">
-            <!-- ============================================== -->
-            <!-- TAB 1: LEAF SCANNER & DIAGNOSIS -->
-            <!-- ============================================== -->
-            <section id="scanner-view" class="tab-view active">
-                <div class="scanner-grid">
-                    <!-- Left: Upload & Input Card -->
-                    <div class="card upload-card">
-                        <div class="card-header">
-                            <div>
-                                <h2 class="card-title">Inspect Tomato Foliage</h2>
-                                <p class="card-desc">Upload leaf image, take camera snapshot, or select quick test samples.</p>
-                            </div>
-                            <span class="badge-accent">Deep CNN Vision</span>
-                        </div>
-
-                        <!-- Quick Sample Tester Chips -->
-                        <div class="sample-chips-bar">
-                            <span class="chips-label">Quick Test Samples:</span>
-                            <div class="chips-group">
-                                <button type="button" class="sample-chip" data-sample="healthy" onclick="loadSampleImage('healthy')">
-                                    <span class="chip-dot dot-green"></span> Healthy Leaf
-                                </button>
-                                <button type="button" class="sample-chip" data-sample="early_blight" onclick="loadSampleImage('early_blight')">
-                                    <span class="chip-dot dot-orange"></span> Early Blight
-                                </button>
-                                <button type="button" class="sample-chip" data-sample="late_blight" onclick="loadSampleImage('late_blight')">
-                                    <span class="chip-dot dot-red"></span> Late Blight
-                                </button>
-                                <button type="button" class="sample-chip" data-sample="yellow_leaf_curl" onclick="loadSampleImage('yellow_leaf_curl')">
-                                    <span class="chip-dot dot-yellow"></span> Yellow Leaf Curl
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Dropzone Area -->
-                        <div class="dropzone" id="dropZone">
-                            <input type="file" id="fileInput" accept="image/*" class="file-input-hidden">
-                            
-                            <div class="dropzone-default" id="dropzoneDefault">
-                                <div class="dropzone-icon-circle">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="upload-cloud-svg">
-                                        <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/>
-                                        <path d="M12 12v9"/>
-                                        <path d="m16 16-4-4-4 4"/>
-                                    </svg>
-                                </div>
-                                <h3 class="dropzone-heading">Drag & drop tomato leaf image here</h3>
-                                <p class="dropzone-sub">Supports JPG, PNG, WEBP (Max 16MB)</p>
-                                
-                                <div class="dropzone-actions">
-                                    <button type="button" class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
-                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                            <polyline points="17 8 12 3 7 8"/>
-                                            <line x1="12" y1="3" x2="12" y2="15"/>
-                                        </svg>
-                                        Browse File
-                                    </button>
-                                    <button type="button" class="btn btn-secondary" onclick="openCameraModal()">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
-                                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                                            <circle cx="12" cy="13" r="4"/>
-                                        </svg>
-                                        Camera Capture
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Preview State -->
-                            <div class="dropzone-preview" id="dropzonePreview" style="display: none;">
-                                <div class="preview-img-container">
-                                    <img id="previewImage" src="" alt="Tomato leaf preview">
-                                    <div class="preview-overlay">
-                                        <button type="button" class="preview-remove-btn" onclick="clearSelectedImage()" title="Remove image">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                                <line x1="18" y1="6" x2="6" y2="18"/>
-                                                <line x1="6" y1="6" x2="18" y2="18"/>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="preview-details">
-                                    <div class="file-meta">
-                                        <span class="file-name" id="previewFileName">leaf_photo.jpg</span>
-                                        <span class="file-size" id="previewFileSize">2.4 MB</span>
-                                    </div>
-                                    <div class="preview-actions">
-                                        <button type="button" class="btn btn-sm btn-ghost" onclick="document.getElementById('fileInput').click()">Change</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Error Alert -->
-                        <div class="alert-box alert-error" id="errorAlert" style="display: none;">
-                            <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"/>
-                                <line x1="12" y1="8" x2="12" y2="12"/>
-                                <line x1="12" y1="16" x2="12.01" y2="16"/>
-                            </svg>
-                            <div class="alert-content">
-                                <h4 class="alert-title">Diagnostic Notice</h4>
-                                <p class="alert-text" id="errorAlertText">Unable to analyze the image.</p>
-                            </div>
-                        </div>
-
-                        <!-- Analyze Button -->
-                        <div class="card-footer">
-                            <button type="button" id="analyzeBtn" class="btn btn-cta" onclick="startAnalysis()" disabled>
-                                <span class="btn-spinner" id="analyzeSpinner" style="display: none;"></span>
-                                <span id="analyzeBtnText">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
-                                        <circle cx="11" cy="11" r="8"/>
-                                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                                    </svg>
-                                    Run AI Diagnosis
-                                </span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Right: Results Card -->
-                    <div class="card results-card" id="resultsCard">
-                        <!-- Initial Placeholder -->
-                        <div class="results-empty-state" id="resultsEmptyState">
-                            <div class="empty-icon-circle">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                                    <path d="m9 12 2 2 4-4"/>
-                                </svg>
-                            </div>
-                            <h3>Awaiting Leaf Scan</h3>
-                            <p>Upload a tomato leaf photo or click a quick sample on the left to see instant condition detection, severity rating, and agronomic treatment guidance.</p>
-                            <div class="supported-classes-pill">10 Disease Classes Trained</div>
-                        </div>
-
-                        <!-- Active Results State -->
-                        <div class="results-active-state" id="resultsActiveState" style="display: none;">
-                            <div class="result-header-row">
-                                <div>
-                                    <div class="result-pretitle">CLINICAL DIAGNOSIS REPORT</div>
-                                    <h2 class="result-disease-name" id="resDiseaseName">Healthy Tomato Leaf</h2>
-                                    <div class="result-badges-row">
-                                        <span class="badge-pill" id="resSeverityBadge">Severity: None</span>
-                                        <span class="badge-pill badge-neutral" id="resCategoryBadge">Fungal</span>
-                                        <span class="badge-pill badge-subtle" id="resPathogenBadge">Pathogen</span>
-                                    </div>
-                                </div>
-                                <div class="confidence-gauge-box">
-                                    <div class="circular-progress">
-                                        <svg class="circle-svg" viewBox="0 0 100 100">
-                                            <circle class="circle-bg" cx="50" cy="50" r="42"/>
-                                            <circle class="circle-fill" id="resGaugeFill" cx="50" cy="50" r="42"/>
-                                        </svg>
-                                        <div class="gauge-inner">
-                                            <span class="gauge-value" id="resGaugeValue">99%</span>
-                                            <span class="gauge-label">Confidence</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Description Banner -->
-                            <div class="diagnosis-summary-banner" id="resDescriptionBanner">
-                                <p id="resDescriptionText"></p>
-                            </div>
-
-                            <!-- Differential Top Predictions -->
-                            <div class="predictions-breakdown">
-                                <h4 class="section-micro-heading">DIFFERENTIAL PROBABILITY RANKING</h4>
-                                <div class="predictions-bars-list" id="resTopPredictionsList">
-                                    <!-- Populated via JS -->
-                                </div>
-                            </div>
-
-                            <!-- Diagnostic Detail Tabs -->
-                            <div class="details-tab-wrapper">
-                                <div class="details-tab-header">
-                                    <button type="button" class="detail-tab-btn active" data-target="panel-symptoms">Key Symptoms</button>
-                                    <button type="button" class="detail-tab-btn" data-target="panel-organic">Organic Treatment</button>
-                                    <button type="button" class="detail-tab-btn" data-target="panel-chemical">Chemical Treatment</button>
-                                    <button type="button" class="detail-tab-btn" data-target="panel-prevention">Preventive Care</button>
-                                </div>
-                                <div class="detail-panel active" id="panel-symptoms">
-                                    <ul class="symptoms-list" id="resSymptomsList">
-                                        <!-- Populated via JS -->
-                                    </ul>
-                                </div>
-                                <div class="detail-panel" id="panel-organic">
-                                    <div class="treatment-box treatment-organic">
-                                        <div class="treatment-icon">🌿</div>
-                                        <div class="treatment-text" id="resOrganicText"></div>
-                                    </div>
-                                </div>
-                                <div class="detail-panel" id="panel-chemical">
-                                    <div class="treatment-box treatment-chemical">
-                                        <div class="treatment-icon">🧪</div>
-                                        <div class="treatment-text" id="resChemicalText"></div>
-                                    </div>
-                                </div>
-                                <div class="detail-panel" id="panel-prevention">
-                                    <div class="treatment-box treatment-prevention">
-                                        <div class="treatment-icon">🛡️</div>
-                                        <div class="treatment-text" id="resPreventionText"></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Result Action Buttons -->
-                            <div class="result-actions-footer">
-                                <button type="button" class="btn btn-outline" onclick="printReport()">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
-                                        <polyline points="6 9 6 2 18 2 18 9"/>
-                                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
-                                        <rect x="6" y="14" width="12" height="8"/>
-                                    </svg>
-                                    Print / Save PDF
-                                </button>
-                                <button type="button" class="btn btn-secondary" onclick="switchToDashboard()">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
-                                        <line x1="18" y1="20" x2="18" y2="10"/>
-                                        <line x1="12" y1="20" x2="12" y2="4"/>
-                                        <line x1="6" y1="20" x2="6" y2="14"/>
-                                    </svg>
-                                    View in Dashboard
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ============================================== -->
-            <!-- TAB 2: FARM HEALTH ANALYTICS DASHBOARD -->
-            <!-- ============================================== -->
-            <section id="dashboard-view" class="tab-view">
-                <div class="dashboard-header-row">
-                    <div>
-                        <h1 class="dashboard-title">Farm Health & Crop Intelligence</h1>
-                        <p class="dashboard-subtitle">Real-time inspection analytics, biosecurity index, multi-disease trends, and climate risk advisories.</p>
-                    </div>
-                    <div class="dashboard-actions">
-                        <button type="button" class="btn btn-outline btn-sm" onclick="exportHistoryCSV()">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                <polyline points="7 10 12 15 17 10"/>
-                                <line x1="12" y1="15" x2="12" y2="3"/>
-                            </svg>
-                            Export CSV
-                        </button>
-                        <button type="button" class="btn btn-ghost btn-sm text-danger" onclick="clearScanHistory()">
-                            Clear History
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Farm Health Biosecurity Banner & Score -->
-                <div class="farm-health-banner">
-                    <div class="banner-left">
-                        <div class="health-gauge-mini">
-                            <svg class="health-mini-svg" viewBox="0 0 36 36">
-                                <path class="circle-bg-mini" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path class="circle-fill-mini" id="bannerHealthPath" stroke-dasharray="100, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                            </svg>
-                            <span class="health-score-val" id="bannerHealthScore">100%</span>
-                        </div>
-                        <div class="banner-text">
-                            <h3 id="bannerHealthTitle">Crop Biosecurity: Optimal Condition</h3>
-                            <p id="bannerHealthDesc">No critical disease outbreaks detected in current crop inspections. Continue standard preventive monitoring.</p>
-                        </div>
-                    </div>
-                    <div class="banner-stats-pills">
-                        <div class="stat-pill">
-                            <span class="stat-pill-label">Risk Status</span>
-                            <span class="stat-pill-val text-success" id="bannerRiskStatus">Low Risk</span>
-                        </div>
-                        <div class="stat-pill">
-                            <span class="stat-pill-label">Inspection Integrity</span>
-                            <span class="stat-pill-val">High (AI Verified)</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- KPI Cards Row -->
-                <div class="kpi-grid">
-                    <div class="kpi-card">
-                        <div class="kpi-icon-box kpi-blue">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-                            </svg>
-                        </div>
-                        <div class="kpi-info">
-                            <span class="kpi-label">Total Leaves Scanned</span>
-                            <h3 class="kpi-value" id="kpiTotalScans">0</h3>
-                            <span class="kpi-subtext">Cumulative inspections</span>
-                        </div>
-                    </div>
-
-                    <div class="kpi-card">
-                        <div class="kpi-icon-box kpi-green">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                            </svg>
-                        </div>
-                        <div class="kpi-info">
-                            <span class="kpi-label">Healthy Plant Ratio</span>
-                            <h3 class="kpi-value text-success" id="kpiHealthyRatio">0%</h3>
-                            <span class="kpi-subtext" id="kpiHealthyCount">0 healthy plants</span>
-                        </div>
-                    </div>
-
-                    <div class="kpi-card">
-                        <div class="kpi-icon-box kpi-red">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polygon points="12 2 2 7 12 12 22 7 12 2"/>
-                                <polyline points="2 17 12 22 22 17"/>
-                                <polyline points="2 12 12 17 22 12"/>
-                            </svg>
-                        </div>
-                        <div class="kpi-info">
-                            <span class="kpi-label">Pathogen Outbreaks</span>
-                            <h3 class="kpi-value text-danger" id="kpiDiseasedCount">0</h3>
-                            <span class="kpi-subtext">Active infection cases</span>
-                        </div>
-                    </div>
-
-                    <div class="kpi-card">
-                        <div class="kpi-icon-box kpi-yellow">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"/>
-                                <polyline points="12 6 12 12 14 14"/>
-                            </svg>
-                        </div>
-                        <div class="kpi-info">
-                            <span class="kpi-label">Mean Confidence</span>
-                            <h3 class="kpi-value" id="kpiAvgConfidence">0%</h3>
-                            <span class="kpi-subtext">Model certainty rating</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Dual Visualizations Grid (Doughnut + Bar Chart) -->
-                <div class="dashboard-analytics-grid">
-                    <!-- Left: Disease Distribution Donut Chart -->
-                    <div class="card chart-card">
-                        <div class="card-header">
-                            <div>
-                                <h3 class="card-title">Disease Distribution</h3>
-                                <p class="card-desc">Visual breakdown of conditions diagnosed in your tomato crops.</p>
-                            </div>
-                        </div>
-                        <div class="chart-wrapper">
-                            <canvas id="diseaseChart"></canvas>
-                        </div>
-                        <div class="chart-empty-msg" id="chartEmptyMsg" style="display: none;">
-                            Scan leaf samples to generate live disease distribution charts.
-                        </div>
-                    </div>
-
-                    <!-- Right: Severity Level Breakdown Bar Chart -->
-                    <div class="card chart-card">
-                        <div class="card-header">
-                            <div>
-                                <h3 class="card-title">Severity Severity Profile</h3>
-                                <p class="card-desc">Critical vs. High vs. Moderate vs. Healthy plant counts.</p>
-                            </div>
-                        </div>
-                        <div class="chart-wrapper">
-                            <canvas id="severityChart"></canvas>
-                        </div>
-                        <div class="chart-empty-msg" id="severityEmptyMsg" style="display: none;">
-                            Scan leaves to visualize severity distribution.
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Environmental Microclimate & Seasonal Advisories Row -->
-                <div class="dashboard-analytics-grid">
-                    <!-- Left: Microclimate Simulation Cards -->
-                    <div class="card climate-card">
-                        <div class="card-header">
-                            <div>
-                                <h3 class="card-title">Microclimate Disease Pressure</h3>
-                                <p class="card-desc">Current ambient condition impact on pathogen propagation.</p>
-                            </div>
-                            <span class="badge-pill badge-neutral">Field Sensors</span>
-                        </div>
-                        <div class="climate-grid">
-                            <div class="climate-item">
-                                <div class="climate-icon-wrap">🌡️</div>
-                                <div class="climate-data">
-                                    <span class="climate-label">Ambient Temp</span>
-                                    <span class="climate-val">23.5 °C</span>
-                                    <span class="climate-status text-success">Optimal Growth</span>
-                                </div>
-                            </div>
-                            <div class="climate-item">
-                                <div class="climate-icon-wrap">💧</div>
-                                <div class="climate-data">
-                                    <span class="climate-label">Rel. Humidity</span>
-                                    <span class="climate-val">82 %</span>
-                                    <span class="climate-status text-warning">High (Blight Warning)</span>
-                                </div>
-                            </div>
-                            <div class="climate-item">
-                                <div class="climate-icon-wrap">🍃</div>
-                                <div class="climate-data">
-                                    <span class="climate-label">Leaf Wetness</span>
-                                    <span class="climate-val">4.2 hrs</span>
-                                    <span class="climate-status text-warning">Spore Germination Risk</span>
-                                </div>
-                            </div>
-                            <div class="climate-item">
-                                <div class="climate-icon-wrap">🪰</div>
-                                <div class="climate-data">
-                                    <span class="climate-label">Vector Activity</span>
-                                    <span class="climate-val">Moderate</span>
-                                    <span class="climate-status">Whiteflies Active</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Right: Seasonal Agronomic Risk Advisories -->
-                    <div class="card advisory-card">
-                        <div class="card-header">
-                            <div>
-                                <h3 class="card-title">Agronomic Risk Advisories</h3>
-                                <p class="card-desc">Weather-correlated pathogen alerts and management guidance.</p>
-                            </div>
-                        </div>
-                        <div class="advisory-items-list">
-                            <div class="advisory-item item-high">
-                                <div class="advisory-badge badge-high">High Risk</div>
-                                <div class="advisory-body">
-                                    <h4>Late Blight (Phytophthora)</h4>
-                                    <p>Wet canopy and high humidity trigger swimming zoospores. Apply protective copper fungicide prior to predicted rain.</p>
-                                </div>
-                            </div>
-                            <div class="advisory-item item-medium">
-                                <div class="advisory-badge badge-medium">Moderate</div>
-                                <div class="advisory-body">
-                                    <h4>Early Blight & Septoria Spot</h4>
-                                    <p>Raindrop splash spreads soil-borne spores to lower leaves. Prune lower 12 inches of foliage and maintain thick straw mulch.</p>
-                                </div>
-                            </div>
-                            <div class="advisory-item item-low">
-                                <div class="advisory-badge badge-low">Vector Alert</div>
-                                <div class="advisory-body">
-                                    <h4>Whiteflies & Spider Mites</h4>
-                                    <p>Dry sunny periods foster whitefly population explosions that spread Yellow Leaf Curl Virus. Hang yellow sticky cards.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Recent Scans Table Card -->
-                <div class="card history-card">
-                    <div class="card-header">
-                        <div>
-                            <h3 class="card-title">Inspection Log & History</h3>
-                            <p class="card-desc">Audit trail of individual plant health scans with diagnosis history.</p>
-                        </div>
-                        <div class="history-filter-chips">
-                            <button type="button" class="filter-pill active" onclick="filterHistoryTable('all')">All</button>
-                            <button type="button" class="filter-pill" onclick="filterHistoryTable('healthy')">Healthy</button>
-                            <button type="button" class="filter-pill" onclick="filterHistoryTable('diseased')">Diseased</button>
-                        </div>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="history-table">
-                            <thead>
-                                <tr>
-                                    <th>Sample</th>
-                                    <th>Detected Condition</th>
-                                    <th>Severity</th>
-                                    <th>Confidence</th>
-                                    <th>Date & Time</th>
-                                    <th>Engine</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="historyTableBody">
-                                <tr>
-                                    <td colspan="7" class="table-empty-td">No scans performed yet. Go to Leaf Scanner to inspect your first leaf!</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ============================================== -->
-            <!-- TAB 3: DISEASE ENCYCLOPEDIA -->
-            <!-- ============================================== -->
-            <section id="encyclopedia-view" class="tab-view">
-                <div class="encyclopedia-header">
-                    <div>
-                        <h1 class="dashboard-title">Tomato Disease Encyclopedia</h1>
-                        <p class="dashboard-subtitle">Comprehensive field guide on all 10 tomato leaf conditions, pathogens, symptoms, and agronomic management.</p>
-                    </div>
-                    <!-- Search & Filter Controls -->
-                    <div class="encyclopedia-search-bar">
-                        <div class="search-input-wrapper">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-svg">
-                                <circle cx="11" cy="11" r="8"/>
-                                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                            </svg>
-                            <input type="text" id="encyclopediaSearch" placeholder="Search diseases, pathogens, symptoms..." oninput="filterEncyclopedia()">
-                        </div>
-                        <div class="category-filter-chips">
-                            <button type="button" class="filter-chip active" data-cat="all" onclick="filterCategory('all')">All (10)</button>
-                            <button type="button" class="filter-chip" data-cat="Fungal" onclick="filterCategory('Fungal')">Fungal</button>
-                            <button type="button" class="filter-chip" data-cat="Bacterial" onclick="filterCategory('Bacterial')">Bacterial</button>
-                            <button type="button" class="filter-chip" data-cat="Viral" onclick="filterCategory('Viral')">Viral</button>
-                            <button type="button" class="filter-chip" data-cat="Pest" onclick="filterCategory('Pest')">Pest</button>
-                            <button type="button" class="filter-chip" data-cat="Healthy" onclick="filterCategory('Healthy')">Healthy</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Encyclopedia Grid -->
-                <div class="encyclopedia-grid" id="encyclopediaGrid">
-                    <!-- Populated dynamically via JS -->
-                </div>
-            </section>
-        </main>
-
-        <!-- Camera Modal -->
-        <div class="modal-backdrop" id="cameraModal" style="display: none;">
-            <div class="modal-card">
-                <div class="modal-header">
-                    <h3 class="modal-title">Take Leaf Photo</h3>
-                    <button type="button" class="modal-close-btn" onclick="closeCameraModal()">×</button>
-                </div>
-                <div class="camera-stream-wrapper">
-                    <video id="cameraVideo" autoplay playsinline></video>
-                    <canvas id="cameraCanvas" style="display: none;"></canvas>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline" onclick="closeCameraModal()">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="capturePhoto()">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
-                            <circle cx="12" cy="12" r="9"/>
-                        </svg>
-                        Capture Snapshot
-                    </button>
-                </div>
-            </div>
+  <!-- ═══ NAVBAR ═══ -->
+  <header class="navbar">
+    <div class="nav-inner">
+      <div class="brand">
+        <div class="brand-logo">
+          <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="18" cy="22" r="12" fill="url(#lg1)"/>
+            <path d="M18 6C18 6 12 10 12 16" stroke="#34d399" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M18 6C18 6 24 10 24 16" stroke="#10b981" stroke-width="2.5" stroke-linecap="round"/>
+            <circle cx="18" cy="6" r="3" fill="#34d399"/>
+            <path d="M13 20C14.5 18 17 18 19 19" stroke="white" stroke-width="1.8" stroke-linecap="round" opacity="0.7"/>
+            <defs>
+              <linearGradient id="lg1" x1="6" y1="11" x2="30" y2="34" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#f43f5e"/>
+                <stop offset="1" stop-color="#be123c"/>
+              </linearGradient>
+            </defs>
+          </svg>
         </div>
+        <div class="brand-name">
+          <span class="brand-leaf">Leaf</span><span class="brand-scan">Scan</span>
+          <span class="ai-badge">AI</span>
+        </div>
+      </div>
+      <div class="nav-right">
+        <div class="status-chip" id="statusChip">
+          <span class="pulse-ring"></span>
+          <span class="status-dot"></span>
+          <span class="status-label">Model Ready</span>
+        </div>
+      </div>
     </div>
+  </header>
 
-    <!-- Script -->
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+  <!-- ═══ HERO ═══ -->
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="hero-tag">🌿 Powered by Deep Learning CNN</div>
+      <h1 class="hero-title">
+        Detect Tomato Diseases<br>
+        <span class="gradient-text">Instantly & Accurately</span>
+      </h1>
+      <p class="hero-desc">
+        Upload a photo of your tomato leaf and get AI-powered disease diagnosis
+        with expert treatment recommendations in seconds.
+      </p>
+      <div class="hero-stats">
+        <div class="stat-chip">
+          <span class="stat-num">10</span>
+          <span class="stat-lbl">Diseases Detected</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-chip">
+          <span class="stat-num">95%</span>
+          <span class="stat-lbl">Accuracy Rate</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-chip">
+          <span class="stat-num">&lt;2s</span>
+          <span class="stat-lbl">Analysis Time</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ MAIN SCANNER ═══ -->
+  <main class="scanner-section">
+    <div class="scanner-grid">
+
+      <!-- LEFT: Upload Panel -->
+      <div class="panel upload-panel" id="uploadPanel">
+        <div class="panel-header">
+          <h2 class="panel-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="panel-icon">
+              <path d="M21 11V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6"/>
+              <circle cx="18" cy="18" r="3"/>
+              <path d="m21 21-1.5-1.5"/>
+            </svg>
+            Scan Your Leaf
+          </h2>
+          <span class="panel-badge">Free & Instant</span>
+        </div>
+
+        <!-- Quick Samples -->
+        <div class="samples-row">
+          <span class="samples-label">Quick test:</span>
+          <button class="sample-btn" onclick="loadSample('healthy')" title="Healthy Leaf">
+            <span class="dot dot-green"></span>Healthy
+          </button>
+          <button class="sample-btn" onclick="loadSample('early_blight')" title="Early Blight">
+            <span class="dot dot-orange"></span>Early Blight
+          </button>
+          <button class="sample-btn" onclick="loadSample('late_blight')" title="Late Blight">
+            <span class="dot dot-red"></span>Late Blight
+          </button>
+          <button class="sample-btn" onclick="loadSample('yellow_leaf_curl')" title="Yellow Curl">
+            <span class="dot dot-yellow"></span>Yellow Curl
+          </button>
+        </div>
+
+        <!-- Dropzone -->
+        <div class="dropzone" id="dropZone" onclick="triggerFileInput()" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+          <input type="file" id="fileInput" accept="image/*" class="hidden-input" onchange="onFileSelected(event)">
+
+          <!-- Empty State -->
+          <div class="dz-empty" id="dzEmpty">
+            <div class="dz-icon-ring">
+              <div class="dz-icon-inner">
+                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" class="leaf-svg">
+                  <ellipse cx="24" cy="32" rx="14" ry="10" fill="url(#lf1)" opacity="0.15"/>
+                  <path d="M24 8C24 8 10 16 10 28C10 35.7 16.3 42 24 42C31.7 42 38 35.7 38 28C38 16 24 8 24 8Z" fill="url(#lf2)"/>
+                  <path d="M24 8V42" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+                  <path d="M24 22C20 18 14 18 14 18" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+                  <path d="M24 30C28 26 34 26 34 26" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+                  <defs>
+                    <linearGradient id="lf1" x1="10" y1="22" x2="38" y2="42" gradientUnits="userSpaceOnUse">
+                      <stop stop-color="#10b981"/>
+                      <stop offset="1" stop-color="#059669"/>
+                    </linearGradient>
+                    <linearGradient id="lf2" x1="10" y1="8" x2="38" y2="42" gradientUnits="userSpaceOnUse">
+                      <stop stop-color="#34d399"/>
+                      <stop offset="1" stop-color="#10b981"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </div>
+            </div>
+            <h3 class="dz-title">Drop your leaf image here</h3>
+            <p class="dz-sub">or click to browse — JPG, PNG, WEBP (max 16MB)</p>
+            <div class="dz-btns">
+              <button type="button" class="btn btn-primary" onclick="triggerFileInput(); event.stopPropagation()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-ic"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Browse File
+              </button>
+              <button type="button" class="btn btn-outline" onclick="openCamera(); event.stopPropagation()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-ic"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                Camera
+              </button>
+            </div>
+          </div>
+
+          <!-- Preview State -->
+          <div class="dz-preview" id="dzPreview" style="display:none">
+            <div class="preview-img-wrap">
+              <img id="previewImg" src="" alt="Leaf preview" class="preview-img">
+              <button class="remove-btn" onclick="clearImage(); event.stopPropagation()" title="Remove">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            <div class="preview-meta">
+              <span class="preview-name" id="previewName">leaf.jpg</span>
+              <span class="preview-size" id="previewSize">0 KB</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Error Box -->
+        <div class="error-box" id="errorBox" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="err-icon"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span id="errorText">Unable to analyze image.</span>
+        </div>
+
+        <!-- Analyze Button -->
+        <button class="btn btn-cta" id="analyzeBtn" onclick="analyze()" disabled>
+          <span class="btn-spinner" id="spinner" style="display:none"></span>
+          <span id="btnLabel">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-ic"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Analyze Leaf
+          </span>
+        </button>
+      </div>
+
+      <!-- RIGHT: Results Panel -->
+      <div class="panel results-panel" id="resultsPanel">
+
+        <!-- Idle State -->
+        <div class="results-idle" id="resultsIdle">
+          <div class="idle-illustration">
+            <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" class="idle-svg">
+              <circle cx="60" cy="60" r="55" fill="rgba(16,185,129,0.06)" stroke="rgba(16,185,129,0.15)" stroke-width="1.5"/>
+              <circle cx="60" cy="60" r="40" fill="rgba(16,185,129,0.06)" stroke="rgba(16,185,129,0.12)" stroke-width="1" stroke-dasharray="4 4"/>
+              <path d="M60 25C60 25 38 37 38 55C38 66.5 48 76 60 76C72 76 82 66.5 82 55C82 37 60 25 60 25Z" fill="url(#ig1)" opacity="0.6"/>
+              <path d="M60 25V76" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M60 45C53 39 44 39 44 39" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M60 58C67 52 76 52 76 52" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" stroke-linecap="round"/>
+              <circle cx="60" cy="90" r="4" fill="rgba(16,185,129,0.4)"/>
+              <circle cx="60" cy="100" r="2" fill="rgba(16,185,129,0.2)"/>
+              <defs>
+                <linearGradient id="ig1" x1="38" y1="25" x2="82" y2="76" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#34d399"/>
+                  <stop offset="1" stop-color="#10b981"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <h3 class="idle-title">Awaiting Analysis</h3>
+          <p class="idle-sub">Upload a tomato leaf image on the left and click <strong>Analyze Leaf</strong> to get your instant AI diagnosis.</p>
+          <div class="idle-features">
+            <div class="feat-item">
+              <span class="feat-icon">🔬</span>
+              <span>Deep CNN Analysis</span>
+            </div>
+            <div class="feat-item">
+              <span class="feat-icon">💊</span>
+              <span>Treatment Plans</span>
+            </div>
+            <div class="feat-item">
+              <span class="feat-icon">🌿</span>
+              <span>Organic Remedies</span>
+            </div>
+            <div class="feat-item">
+              <span class="feat-icon">⚡</span>
+              <span>Instant Results</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Loading State -->
+        <div class="results-loading" id="resultsLoading" style="display:none">
+          <div class="scan-animation">
+            <div class="scan-ring r1"></div>
+            <div class="scan-ring r2"></div>
+            <div class="scan-ring r3"></div>
+            <div class="scan-center">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="scan-icon"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            </div>
+          </div>
+          <p class="loading-text">Analyzing leaf tissue...</p>
+          <div class="loading-steps">
+            <div class="step active" id="step1">📡 Loading image</div>
+            <div class="step" id="step2">🧬 Extracting features</div>
+            <div class="step" id="step3">🤖 Running CNN model</div>
+            <div class="step" id="step4">📋 Generating report</div>
+          </div>
+        </div>
+
+        <!-- Result State -->
+        <div class="results-content" id="resultsContent" style="display:none">
+
+          <!-- Result Header -->
+          <div class="result-header" id="resultHeader">
+            <div class="result-status-icon" id="resultIcon">🔴</div>
+            <div class="result-info">
+              <div class="result-label" id="resultLabel">Disease Detected</div>
+              <h2 class="result-name" id="resultName">Early Blight</h2>
+              <p class="result-pathogen" id="resultPathogen">Alternaria solani</p>
+            </div>
+            <div class="result-badges">
+              <span class="severity-badge" id="severityBadge">High</span>
+              <span class="category-badge" id="categoryBadge">Fungal</span>
+            </div>
+          </div>
+
+          <!-- Confidence Bar -->
+          <div class="confidence-block">
+            <div class="conf-label-row">
+              <span class="conf-label">AI Confidence</span>
+              <span class="conf-value" id="confValue">0%</span>
+            </div>
+            <div class="conf-track">
+              <div class="conf-bar" id="confBar" style="width:0%"></div>
+            </div>
+            <div class="engine-tag" id="engineTag">Deep Learning CNN</div>
+          </div>
+
+          <!-- Top Predictions -->
+          <div class="top-preds" id="topPreds">
+            <div class="section-label">Top Predictions</div>
+            <div class="preds-list" id="predsList"></div>
+          </div>
+
+          <!-- Description -->
+          <div class="desc-block" id="descBlock">
+            <div class="section-label">About This Disease</div>
+            <p class="desc-text" id="descText"></p>
+          </div>
+
+          <!-- Symptoms -->
+          <div class="symptoms-block" id="symptomsBlock">
+            <div class="section-label">Symptoms</div>
+            <ul class="symptoms-list" id="symptomsList"></ul>
+          </div>
+
+          <!-- Treatment Cards -->
+          <div class="treatment-grid" id="treatmentGrid">
+            <div class="treat-card organic-card">
+              <div class="treat-card-header">
+                <span class="treat-icon">🌿</span>
+                <span class="treat-title">Organic Treatment</span>
+              </div>
+              <p class="treat-text" id="organicText"></p>
+            </div>
+            <div class="treat-card chemical-card">
+              <div class="treat-card-header">
+                <span class="treat-icon">⚗️</span>
+                <span class="treat-title">Chemical Treatment</span>
+              </div>
+              <p class="treat-text" id="chemicalText"></p>
+            </div>
+            <div class="treat-card prevention-card">
+              <div class="treat-card-header">
+                <span class="treat-icon">🛡️</span>
+                <span class="treat-title">Prevention</span>
+              </div>
+              <p class="treat-text" id="preventionText"></p>
+            </div>
+          </div>
+
+          <!-- Scan Again -->
+          <button class="btn btn-outline scan-again-btn" onclick="clearImage()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-ic"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.52"/></svg>
+            Scan Another Leaf
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ═══ DISEASE CARDS ROW ═══ -->
+  <section class="diseases-section">
+    <div class="diseases-inner">
+      <div class="section-heading">
+        <h2>10 Diseases We Detect</h2>
+        <p>Our AI model is trained on thousands of real tomato leaf samples</p>
+      </div>
+      <div class="disease-cards-grid">
+        <div class="disease-card" onclick="loadSample('healthy')">
+          <div class="dc-icon healthy">🟢</div>
+          <div class="dc-name">Healthy</div>
+          <div class="dc-type">Normal</div>
+        </div>
+        <div class="disease-card">
+          <div class="dc-icon bacterial">🟠</div>
+          <div class="dc-name">Bacterial Spot</div>
+          <div class="dc-type">Bacterial</div>
+        </div>
+        <div class="disease-card" onclick="loadSample('early_blight')">
+          <div class="dc-icon fungal">🟡</div>
+          <div class="dc-name">Early Blight</div>
+          <div class="dc-type">Fungal</div>
+        </div>
+        <div class="disease-card" onclick="loadSample('late_blight')">
+          <div class="dc-icon critical">🔴</div>
+          <div class="dc-name">Late Blight</div>
+          <div class="dc-type">Oomycete</div>
+        </div>
+        <div class="disease-card">
+          <div class="dc-icon fungal">🟤</div>
+          <div class="dc-name">Leaf Mold</div>
+          <div class="dc-type">Fungal</div>
+        </div>
+        <div class="disease-card">
+          <div class="dc-icon fungal">🟠</div>
+          <div class="dc-name">Septoria Spot</div>
+          <div class="dc-type">Fungal</div>
+        </div>
+        <div class="disease-card">
+          <div class="dc-icon pest">🕷️</div>
+          <div class="dc-name">Spider Mites</div>
+          <div class="dc-type">Pest</div>
+        </div>
+        <div class="disease-card">
+          <div class="dc-icon fungal">🟤</div>
+          <div class="dc-name">Target Spot</div>
+          <div class="dc-type">Fungal</div>
+        </div>
+        <div class="disease-card" onclick="loadSample('yellow_leaf_curl')">
+          <div class="dc-icon critical">🟡</div>
+          <div class="dc-name">Yellow Leaf Curl</div>
+          <div class="dc-type">Viral</div>
+        </div>
+        <div class="disease-card">
+          <div class="dc-icon critical">🔴</div>
+          <div class="dc-name">Mosaic Virus</div>
+          <div class="dc-type">Viral</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ FOOTER ═══ -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <span class="brand-leaf">Leaf</span><span class="brand-scan">Scan</span>
+        <span class="ai-badge">AI</span>
+      </div>
+      <p class="footer-text">AI-powered tomato disease detection using Deep Learning CNN trained on PlantVillage dataset.</p>
+      <p class="footer-sub">For educational & agricultural advisory use only.</p>
+    </div>
+  </footer>
+
+  <!-- ═══ CAMERA MODAL ═══ -->
+  <div class="modal-overlay" id="cameraModal" style="display:none" onclick="closeCamera()">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Camera Capture</h3>
+        <button class="modal-close" onclick="closeCamera()">✕</button>
+      </div>
+      <video id="cameraVideo" autoplay playsinline class="camera-video"></video>
+      <canvas id="cameraCanvas" style="display:none"></canvas>
+      <div class="modal-actions">
+        <button class="btn btn-primary" onclick="capturePhoto()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-ic"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+          Capture
+        </button>
+        <button class="btn btn-outline" onclick="closeCamera()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>
