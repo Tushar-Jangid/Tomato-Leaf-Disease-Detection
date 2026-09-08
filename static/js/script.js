@@ -1,260 +1,702 @@
-// Global variables
-let selectedFile = null;
+/**
+ * AgroScan AI - Tomato Disease Detection & Farm Analytics
+ * Main Client Logic
+ */
 
-// Image input change handler
-document.getElementById('imageInput').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-        handleImageUpload(file);
-    }
+// Global State
+let currentSelectedFile = null;
+let diseaseChartInstance = null;
+let encyclopediaData = [];
+let cameraStream = null;
+
+// LocalStorage Keys
+const STORAGE_KEY_SCANS = 'agroscan_history_v1';
+
+// DOM Ready initialization
+document.addEventListener('DOMContentLoaded', () => {
+    initNavigationTabs();
+    initDropzone();
+    initDetailSubTabs();
+    loadEncyclopedia();
+    loadScanHistory();
+    updateDashboard();
 });
 
-// Handle image upload
-function handleImageUpload(file) {
-    // Validate file type
+/* =========================================================
+   NAVIGATION TABS
+   ========================================================= */
+function initNavigationTabs() {
+    const tabs = document.querySelectorAll('.nav-tab');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const targetId = tab.getAttribute('data-tab');
+            switchTab(targetId);
+        });
+    });
+}
+
+function switchTab(targetId) {
+    document.querySelectorAll('.nav-tab').forEach(t => {
+        t.classList.toggle('active', t.getAttribute('data-tab') === targetId);
+    });
+    document.querySelectorAll('.tab-view').forEach(view => {
+        view.classList.toggle('active', view.id === targetId);
+    });
+
+    if (targetId === 'dashboard-view') {
+        updateDashboard();
+    }
+}
+
+function switchToDashboard() {
+    switchTab('dashboard-view');
+}
+
+/* =========================================================
+   DROPZONE & FILE SELECTION
+   ========================================================= */
+function initDropzone() {
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+
+    // Drag & Drop events
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.add('dragover');
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.remove('dragover');
+        });
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        const files = e.dataTransfer.files;
+        if (files && files.length > 0) {
+            handleSelectedFile(files[0]);
+        }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+            handleSelectedFile(e.target.files[0]);
+        }
+    });
+}
+
+function handleSelectedFile(file) {
+    hideErrorAlert();
+    
+    // Validate type
     if (!file.type.startsWith('image/')) {
-        showError('Please select a valid image file');
+        showErrorAlert('Please upload a valid image file (JPG, PNG, WEBP).');
         return;
     }
-    
-    // Validate file size (max 16MB)
+
+    // Validate size (16MB)
     if (file.size > 16 * 1024 * 1024) {
-        showError('File size must be less than 16MB');
+        showErrorAlert('File size exceeds the 16MB limit.');
         return;
     }
-    
-    selectedFile = file;
-    
-    // Preview image
+
+    currentSelectedFile = file;
+
+    // Display Preview
     const reader = new FileReader();
-    reader.onload = function(e) {
-        const preview = document.getElementById('imagePreview');
-        const previewImg = document.getElementById('previewImg');
-        previewImg.src = e.target.result;
-        preview.style.display = 'block';
+    reader.onload = (e) => {
+        const previewImage = document.getElementById('previewImage');
+        const previewFileName = document.getElementById('previewFileName');
+        const previewFileSize = document.getElementById('previewFileSize');
         
-        // Show analyze button
-        document.getElementById('analyzeBtn').style.display = 'block';
+        previewImage.src = e.target.result;
+        previewFileName.textContent = file.name;
+        previewFileSize.textContent = formatBytes(file.size);
+
+        document.getElementById('dropzoneDefault').style.display = 'none';
+        document.getElementById('dropzonePreview').style.display = 'block';
         
-        // Hide results and errors
-        document.getElementById('resultsSection').style.display = 'none';
-        document.getElementById('errorMessage').style.display = 'none';
+        // Enable Analyze Button
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        analyzeBtn.disabled = false;
     };
     reader.readAsDataURL(file);
 }
 
-// Remove image
-function removeImage() {
-    selectedFile = null;
-    document.getElementById('imageInput').value = '';
-    document.getElementById('imagePreview').style.display = 'none';
-    document.getElementById('analyzeBtn').style.display = 'none';
-    document.getElementById('resultsSection').style.display = 'none';
+function clearSelectedImage() {
+    currentSelectedFile = null;
+    document.getElementById('fileInput').value = '';
+    document.getElementById('dropzoneDefault').style.display = 'block';
+    document.getElementById('dropzonePreview').style.display = 'none';
+    document.getElementById('analyzeBtn').disabled = true;
+    hideErrorAlert();
 }
 
-// Analyze image
-async function analyzeImage() {
-    if (!selectedFile) {
-        showError('Please select an image first');
+/* =========================================================
+   QUICK SAMPLE TESTER
+   ========================================================= */
+async function loadSampleImage(sampleType) {
+    hideErrorAlert();
+    const sampleFiles = {
+        'healthy': { path: '/static/samples/healthy.jpg', name: 'healthy_leaf_sample.jpg' },
+        'early_blight': { path: '/static/samples/early_blight.jpg', name: 'early_blight_sample.jpg' },
+        'late_blight': { path: '/static/samples/late_blight.jpg', name: 'late_blight_sample.jpg' },
+        'yellow_leaf_curl': { path: '/static/samples/yellow_leaf_curl.jpg', name: 'yellow_curl_sample.jpg' }
+    };
+
+    const target = sampleFiles[sampleType];
+    if (!target) return;
+
+    try {
+        const res = await fetch(target.path);
+        if (!res.ok) throw new Error('Sample not available');
+        const blob = await res.blob();
+        const file = new File([blob], target.name, { type: 'image/jpeg' });
+        handleSelectedFile(file);
+    } catch (err) {
+        console.warn('Sample image load error:', err);
+        showErrorAlert('Could not load sample image: ' + target.name);
+    }
+}
+
+/* =========================================================
+   CAMERA SNAPSHOT
+   ========================================================= */
+async function openCameraModal() {
+    const modal = document.getElementById('cameraModal');
+    const video = document.getElementById('cameraVideo');
+    modal.style.display = 'flex';
+
+    try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+        });
+        video.srcObject = cameraStream;
+    } catch (err) {
+        alert('Camera access denied or unavailable: ' + err.message);
+        closeCameraModal();
+    }
+}
+
+function closeCameraModal() {
+    const modal = document.getElementById('cameraModal');
+    const video = document.getElementById('cameraVideo');
+    if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+    }
+    video.srcObject = null;
+    modal.style.display = 'none';
+}
+
+function capturePhoto() {
+    const video = document.getElementById('cameraVideo');
+    const canvas = document.getElementById('cameraCanvas');
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    canvas.toBlob((blob) => {
+        if (blob) {
+            const snapFile = new File([blob], `leaf_snap_${Date.now()}.jpg`, { type: 'image/jpeg' });
+            closeCameraModal();
+            handleSelectedFile(snapFile);
+        }
+    }, 'image/jpeg', 0.92);
+}
+
+/* =========================================================
+   ANALYSIS INFERENCE
+   ========================================================= */
+async function startAnalysis() {
+    if (!currentSelectedFile) {
+        showErrorAlert('Please select or capture an image first.');
         return;
     }
-    
+
     const analyzeBtn = document.getElementById('analyzeBtn');
-    const btnText = analyzeBtn.querySelector('.btn-text');
-    const loader = analyzeBtn.querySelector('.loader');
-    
-    // Show loading state
+    const spinner = document.getElementById('analyzeSpinner');
+    const btnText = document.getElementById('analyzeBtnText');
+
     analyzeBtn.disabled = true;
-    btnText.textContent = 'Analyzing...';
-    loader.style.display = 'inline-block';
-    
-    // Hide previous results and errors
-    document.getElementById('resultsSection').style.display = 'none';
-    document.getElementById('errorMessage').style.display = 'none';
-    
-    // Create form data
+    spinner.style.display = 'inline-block';
+    btnText.style.display = 'none';
+    hideErrorAlert();
+
     const formData = new FormData();
-    formData.append('file', selectedFile);
-    
+    formData.append('file', currentSelectedFile);
+
     try {
         const response = await fetch('/predict', {
             method: 'POST',
             body: formData
         });
-        
+
         const data = await response.json();
-        
+
         if (response.ok && data.success) {
-            displayResults(data);
-        } else if (data.is_leaf === false) {
-            // Custom error for invalid leaf images
-            showError(data.error || 'Invalid image');
+            renderResults(data);
+            saveScanToHistory(data);
         } else {
-            showError(data.error || 'An error occurred during analysis');
+            showErrorAlert(data.error || 'Failed to analyze image. Please try a different leaf photo.');
         }
     } catch (error) {
-        showError('Failed to connect to the server. Please try again.');
-        console.error('Error:', error);
+        console.error('Inference error:', error);
+        showErrorAlert('Failed to communicate with diagnostic server. Please try again.');
     } finally {
-        // Reset button state
         analyzeBtn.disabled = false;
-        btnText.textContent = 'Analyze Image';
-        loader.style.display = 'none';
+        spinner.style.display = 'none';
+        btnText.style.display = 'inline-flex';
     }
 }
 
-// Display results
-function displayResults(data) {
-    // Show results section
-    document.getElementById('resultsSection').style.display = 'block';
-    
-    // Set health status
-    const healthStatus = document.getElementById('healthStatus');
-    const isHealthy = data.prediction.includes('healthy');
-    healthStatus.textContent = isHealthy ? '✓ Healthy' : '⚠ Disease Detected';
-    healthStatus.className = 'health-status ' + (isHealthy ? 'status-healthy' : 'status-diseased');
-    
-    // Set disease name
-    const diseaseName = data.prediction.replace(/_/g, ' ');
-    document.getElementById('diseaseName').textContent = diseaseName;
-    
-    // Set confidence
-    const confidence = data.confidence.toFixed(2);
-    document.getElementById('confidence').textContent = `Confidence: ${confidence}%`;
-    
-    // Update progress circle
-    updateProgressCircle(data.confidence);
-    
-    // Set description and treatment
-    document.getElementById('diseaseDescription').textContent = data.description;
-    document.getElementById('diseaseTreatment').textContent = data.treatment;
-    
-    // Display top predictions
-    displayTopPredictions(data.top_predictions);
-    
-    // Scroll to results
-    setTimeout(() => {
-        document.getElementById('resultsSection').scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'nearest' 
-        });
-    }, 100);
-}
+/* =========================================================
+   RENDER DIAGNOSIS RESULTS
+   ========================================================= */
+function renderResults(data) {
+    document.getElementById('resultsEmptyState').style.display = 'none';
+    document.getElementById('resultsActiveState').style.display = 'block';
 
-// Update progress circle
-function updateProgressCircle(percentage) {
-    const circle = document.getElementById('progressRingFill');
-    const text = document.getElementById('progressText');
-    
-    const radius = 52;
-    const circumference = 2 * Math.PI * radius;
-    const offset = circumference - (percentage / 100) * circumference;
-    
-    // Animate the circle
-    setTimeout(() => {
-        circle.style.strokeDashoffset = offset;
-        
-        // Change color based on confidence
-        if (percentage >= 80) {
-            circle.style.stroke = '#51cf66';
-        } else if (percentage >= 60) {
-            circle.style.stroke = '#ffd43b';
-        } else {
-            circle.style.stroke = '#ff6b6b';
-        }
-    }, 100);
-    
-    // Animate the percentage text
-    animateValue(text, 0, percentage, 1000);
-}
+    // Title & Badges
+    document.getElementById('resDiseaseName').textContent = data.display_name;
 
-// Animate number value
-function animateValue(element, start, end, duration) {
-    let startTimestamp = null;
-    const step = (timestamp) => {
-        if (!startTimestamp) startTimestamp = timestamp;
-        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-        const value = Math.floor(progress * (end - start) + start);
-        element.textContent = value + '%';
-        if (progress < 1) {
-            window.requestAnimationFrame(step);
-        }
-    };
-    window.requestAnimationFrame(step);
-}
+    // Severity Badge styling
+    const sevBadge = document.getElementById('resSeverityBadge');
+    sevBadge.textContent = `Severity: ${data.severity}`;
+    sevBadge.className = 'badge-pill';
+    const sevLower = (data.severity || '').toLowerCase();
+    if (sevLower === 'critical') sevBadge.classList.add('badge-severity-critical');
+    else if (sevLower === 'high') sevBadge.classList.add('badge-severity-high');
+    else if (sevLower === 'moderate') sevBadge.classList.add('badge-severity-moderate');
+    else sevBadge.classList.add('badge-severity-none');
 
-// Display top predictions
-function displayTopPredictions(predictions) {
-    const container = document.getElementById('topPredictions');
-    container.innerHTML = '';
-    
-    predictions.forEach((pred, index) => {
+    document.getElementById('resCategoryBadge').textContent = data.category;
+    document.getElementById('resPathogenBadge').textContent = data.pathogen || 'N/A';
+
+    // Gauge Circle
+    const confVal = Math.round(data.confidence);
+    document.getElementById('resGaugeValue').textContent = `${confVal}%`;
+    const gaugeFill = document.getElementById('resGaugeFill');
+    const maxOffset = 264;
+    const strokeOffset = maxOffset - (confVal / 100) * maxOffset;
+    gaugeFill.style.strokeDashoffset = strokeOffset;
+    gaugeFill.style.stroke = data.is_healthy ? '#10b981' : (sevLower === 'critical' ? '#ef4444' : '#f97316');
+
+    // Description Banner
+    document.getElementById('resDescriptionText').textContent = data.description;
+
+    // Top 3 Predictions
+    const predContainer = document.getElementById('resTopPredictionsList');
+    predContainer.innerHTML = '';
+    (data.top_predictions || []).forEach(pred => {
         const item = document.createElement('div');
-        item.className = 'prediction-item';
-        item.style.animationDelay = `${index * 0.1}s`;
-        
-        const name = document.createElement('span');
-        name.className = 'prediction-name';
-        name.textContent = `${index + 1}. ${pred.disease.replace(/_/g, ' ')}`;
-        
-        const confidence = document.createElement('span');
-        confidence.className = 'prediction-confidence';
-        confidence.textContent = `${pred.confidence.toFixed(2)}%`;
-        
-        item.appendChild(name);
-        item.appendChild(confidence);
-        container.appendChild(item);
+        item.className = 'prediction-bar-item';
+        item.innerHTML = `
+            <span class="pred-bar-label" title="${pred.display_name}">${pred.display_name}</span>
+            <div class="pred-bar-track">
+                <div class="pred-bar-fill" style="width: ${pred.confidence}%;"></div>
+            </div>
+            <span class="pred-bar-value">${pred.confidence.toFixed(1)}%</span>
+        `;
+        predContainer.appendChild(item);
+    });
+
+    // Symptoms List
+    const symList = document.getElementById('resSymptomsList');
+    symList.innerHTML = '';
+    (data.symptoms || []).forEach(sym => {
+        const li = document.createElement('li');
+        li.textContent = sym;
+        symList.appendChild(li);
+    });
+
+    // Treatments
+    document.getElementById('resOrganicText').textContent = data.organic_treatment || 'No specific organic treatment required.';
+    document.getElementById('resChemicalText').textContent = data.chemical_treatment || 'No chemical treatment necessary.';
+    document.getElementById('resPreventionText').textContent = data.prevention || 'Maintain standard good agronomic practices.';
+
+    // Scroll slightly if mobile
+    if (window.innerWidth < 1024) {
+        document.getElementById('resultsCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+/* =========================================================
+   DIAGNOSTIC DETAIL SUB-TABS
+   ========================================================= */
+function initDetailSubTabs() {
+    const detailTabs = document.querySelectorAll('.detail-tab-btn');
+    detailTabs.forEach(btn => {
+        btn.addEventListener('click', () => {
+            detailTabs.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const targetId = btn.getAttribute('data-target');
+            document.querySelectorAll('.detail-panel').forEach(panel => {
+                panel.classList.toggle('active', panel.id === targetId);
+            });
+        });
     });
 }
 
-// Show error message
-function showError(message) {
-    const errorDiv = document.getElementById('errorMessage');
-    const errorText = document.getElementById('errorText');
-    
-    errorText.textContent = message;
-    errorDiv.style.display = 'block';
-    
-    // Scroll to error
-    setTimeout(() => {
-        errorDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }, 100);
-    
-    // Auto-hide after 5 seconds
-    setTimeout(() => {
-        errorDiv.style.display = 'none';
-    }, 5000);
+/* =========================================================
+   ERROR ALERTS
+   ========================================================= */
+function showErrorAlert(msg) {
+    const box = document.getElementById('errorAlert');
+    const text = document.getElementById('errorAlertText');
+    text.textContent = msg;
+    box.style.display = 'flex';
 }
 
-// Reset analysis
-function resetAnalysis() {
-    removeImage();
-    document.getElementById('resultsSection').style.display = 'none';
-    
-    // Scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+function hideErrorAlert() {
+    const box = document.getElementById('errorAlert');
+    if (box) box.style.display = 'none';
 }
 
-// Drag and drop functionality
-const uploadCard = document.querySelector('.upload-card');
+/* =========================================================
+   STORAGE & SCAN HISTORY
+   ========================================================= */
+function saveScanToHistory(data) {
+    try {
+        let history = JSON.parse(localStorage.getItem(STORAGE_KEY_SCANS) || '[]');
+        
+        // Get thumbnail preview if available
+        let thumbUrl = '';
+        const previewImg = document.getElementById('previewImage');
+        if (previewImg && previewImg.src) {
+            thumbUrl = previewImg.src;
+        }
 
-uploadCard.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    uploadCard.style.background = '#f8f9fa';
-    uploadCard.style.borderColor = '#667eea';
-});
+        const record = {
+            id: Date.now(),
+            disease: data.prediction,
+            display_name: data.display_name,
+            is_healthy: data.is_healthy,
+            confidence: data.confidence,
+            severity: data.severity,
+            engine: data.engine || 'CNN',
+            date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+            thumb: thumbUrl
+        };
 
-uploadCard.addEventListener('dragleave', (e) => {
-    e.preventDefault();
-    uploadCard.style.background = 'white';
-});
+        history.unshift(record); // Prepend newest
+        if (history.length > 50) history = history.slice(0, 50); // Cap to 50
 
-uploadCard.addEventListener('drop', (e) => {
-    e.preventDefault();
-    uploadCard.style.background = 'white';
-    
-    const file = e.dataTransfer.files[0];
-    if (file) {
-        handleImageUpload(file);
+        localStorage.setItem(STORAGE_KEY_SCANS, JSON.stringify(history));
+        updateDashboard();
+    } catch (e) {
+        console.warn('Could not save to localStorage:', e);
     }
-});
+}
+
+function loadScanHistory() {
+    try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY_SCANS) || '[]');
+    } catch (e) {
+        return [];
+    }
+}
+
+function clearScanHistory() {
+    if (confirm('Are you sure you want to clear all scan history logs?')) {
+        localStorage.removeItem(STORAGE_KEY_SCANS);
+        updateDashboard();
+    }
+}
+
+function exportHistoryCSV() {
+    const history = loadScanHistory();
+    if (!history.length) {
+        alert('No scan history records available to export.');
+        return;
+    }
+
+    let csvContent = 'data:text/csv;charset=utf-8,ID,Date,Condition,Confidence,Severity,Healthy,Engine\n';
+    history.forEach(item => {
+        csvContent += `"${item.id}","${item.date}","${item.display_name}","${item.confidence}%","${item.severity}","${item.is_healthy}","${item.engine}"\n`;
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `agroscan_history_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+/* =========================================================
+   DASHBOARD UPDATE & CHARTS
+   ========================================================= */
+function updateDashboard() {
+    const history = loadScanHistory();
+    const count = history.length;
+
+    // Update Pill on Navbar
+    const pill = document.getElementById('scanCountPill');
+    if (pill) pill.textContent = count;
+
+    // Update KPI metrics
+    const totalScansEl = document.getElementById('kpiTotalScans');
+    const healthyRatioEl = document.getElementById('kpiHealthyRatio');
+    const healthyCountEl = document.getElementById('kpiHealthyCount');
+    const diseasedCountEl = document.getElementById('kpiDiseasedCount');
+    const avgConfidenceEl = document.getElementById('kpiAvgConfidence');
+
+    if (count === 0) {
+        if (totalScansEl) totalScansEl.textContent = '0';
+        if (healthyRatioEl) healthyRatioEl.textContent = '0%';
+        if (healthyCountEl) healthyCountEl.textContent = '0 healthy plants';
+        if (diseasedCountEl) diseasedCountEl.textContent = '0';
+        if (avgConfidenceEl) avgConfidenceEl.textContent = '0%';
+    } else {
+        const healthyItems = history.filter(h => h.is_healthy);
+        const healthyCount = healthyItems.length;
+        const diseasedCount = count - healthyCount;
+        const healthyRatio = Math.round((healthyCount / count) * 100);
+
+        const totalConf = history.reduce((sum, h) => sum + (h.confidence || 0), 0);
+        const avgConf = Math.round(totalConf / count);
+
+        if (totalScansEl) totalScansEl.textContent = count;
+        if (healthyRatioEl) healthyRatioEl.textContent = `${healthyRatio}%`;
+        if (healthyCountEl) healthyCountEl.textContent = `${healthyCount} of ${count} healthy`;
+        if (diseasedCountEl) diseasedCountEl.textContent = diseasedCount;
+        if (avgConfidenceEl) avgConfidenceEl.textContent = `${avgConf}%`;
+    }
+
+    // Render Recent Scans Table
+    renderHistoryTable(history);
+
+    // Render Chart.js
+    renderDiseaseChart(history);
+}
+
+function renderHistoryTable(history) {
+    const tbody = document.getElementById('historyTableBody');
+    if (!tbody) return;
+
+    if (!history.length) {
+        tbody.innerHTML = `<tr><td colspan="7" class="table-empty-td">No scans performed yet. Go to Leaf Scanner to inspect your first leaf!</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = '';
+    history.slice(0, 15).forEach((record, index) => {
+        const tr = document.createElement('tr');
+        
+        const sevClass = record.severity === 'Critical' ? 'badge-severity-critical' :
+                         record.severity === 'High' ? 'badge-severity-high' :
+                         record.severity === 'Moderate' ? 'badge-severity-moderate' : 'badge-severity-none';
+
+        tr.innerHTML = `
+            <td>
+                <img src="${record.thumb || '/static/samples/healthy.jpg'}" alt="Leaf" class="table-thumb">
+            </td>
+            <td>
+                <strong>${record.display_name}</strong>
+            </td>
+            <td>
+                <span class="badge-pill ${sevClass}">${record.severity}</span>
+            </td>
+            <td>
+                <strong>${record.confidence.toFixed(1)}%</strong>
+            </td>
+            <td>${record.date}</td>
+            <td>
+                <span class="badge-accent">${record.engine || 'CNN'}</span>
+            </td>
+            <td>
+                <button type="button" class="btn btn-ghost btn-sm text-danger" onclick="deleteHistoryRecord(${record.id})">Delete</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function deleteHistoryRecord(id) {
+    let history = loadScanHistory();
+    history = history.filter(item => item.id !== id);
+    localStorage.setItem(STORAGE_KEY_SCANS, JSON.stringify(history));
+    updateDashboard();
+}
+
+function renderDiseaseChart(history) {
+    const canvas = document.getElementById('diseaseChart');
+    const emptyMsg = document.getElementById('chartEmptyMsg');
+    if (!canvas) return;
+
+    if (!history.length) {
+        canvas.style.display = 'none';
+        if (emptyMsg) emptyMsg.style.display = 'block';
+        return;
+    }
+
+    canvas.style.display = 'block';
+    if (emptyMsg) emptyMsg.style.display = 'none';
+
+    // Count distributions
+    const counts = {};
+    history.forEach(item => {
+        const name = item.display_name;
+        counts[name] = (counts[name] || 0) + 1;
+    });
+
+    const labels = Object.keys(counts);
+    const dataValues = Object.values(counts);
+
+    // Color palette for chart
+    const colors = [
+        '#10b981', '#3b82f6', '#f97316', '#ef4444', 
+        '#eab308', '#8b5cf6', '#ec4899', '#06b6d4', 
+        '#14b8a6', '#f43f5e'
+    ];
+
+    if (diseaseChartInstance) {
+        diseaseChartInstance.destroy();
+    }
+
+    const ctx = canvas.getContext('2d');
+    diseaseChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: dataValues,
+                backgroundColor: colors.slice(0, labels.length),
+                borderWidth: 2,
+                borderColor: '#121e21'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        color: '#cbd5e1',
+                        font: { family: 'Plus Jakarta Sans', size: 11 },
+                        padding: 12,
+                        boxWidth: 12,
+                        boxHeight: 12
+                    }
+                }
+            },
+            cutout: '68%'
+        }
+    });
+}
+
+/* =========================================================
+   DISEASE ENCYCLOPEDIA
+   ========================================================= */
+async function loadEncyclopedia() {
+    const grid = document.getElementById('encyclopediaGrid');
+    if (!grid) return;
+
+    try {
+        const res = await fetch('/api/diseases');
+        const data = await res.json();
+        if (data.success && data.diseases) {
+            encyclopediaData = data.diseases;
+            renderEncyclopediaGrid(encyclopediaData);
+        }
+    } catch (e) {
+        console.warn('Failed to load diseases list from API:', e);
+    }
+}
+
+function renderEncyclopediaGrid(diseases) {
+    const grid = document.getElementById('encyclopediaGrid');
+    if (!grid) return;
+
+    grid.innerHTML = '';
+    if (!diseases.length) {
+        grid.innerHTML = '<p class="text-muted" style="grid-column: 1/-1; text-align: center;">No matching conditions found.</p>';
+        return;
+    }
+
+    diseases.forEach(d => {
+        const card = document.createElement('div');
+        card.className = 'encyclo-card';
+
+        const sevClass = d.severity === 'Critical' ? 'badge-severity-critical' :
+                         d.severity === 'High' ? 'badge-severity-high' :
+                         d.severity === 'Moderate' ? 'badge-severity-moderate' : 'badge-severity-none';
+
+        const symptomsListHtml = (d.symptoms || []).map(s => `<li>${s}</li>`).join('');
+
+        card.innerHTML = `
+            <div class="encyclo-card-top">
+                <div class="encyclo-badges">
+                    <span class="badge-pill badge-neutral">${d.category}</span>
+                    <span class="badge-pill ${sevClass}">Severity: ${d.severity}</span>
+                </div>
+                <h3 class="encyclo-title">${d.display_name}</h3>
+                <div class="encyclo-pathogen">${d.pathogen || 'N/A'}</div>
+                <p class="encyclo-desc">${d.description}</p>
+                <div class="encyclo-symptoms-box">
+                    <h5>Key Symptoms</h5>
+                    <ul>${symptomsListHtml}</ul>
+                </div>
+            </div>
+            <div class="encyclo-treatment-footer">
+                <p><strong>Treatment:</strong> ${d.organic_treatment || d.treatment}</p>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+function filterEncyclopedia() {
+    const query = (document.getElementById('encyclopediaSearch').value || '').toLowerCase();
+    const activeChip = document.querySelector('.category-filter-chips .filter-chip.active');
+    const cat = activeChip ? activeChip.getAttribute('data-cat') : 'all';
+
+    const filtered = encyclopediaData.filter(d => {
+        const matchCat = (cat === 'all' || d.category.toLowerCase() === cat.toLowerCase());
+        const matchQuery = !query || 
+            d.display_name.toLowerCase().includes(query) ||
+            (d.pathogen && d.pathogen.toLowerCase().includes(query)) ||
+            (d.description && d.description.toLowerCase().includes(query)) ||
+            ((d.symptoms || []).some(s => s.toLowerCase().includes(query)));
+        return matchCat && matchQuery;
+    });
+
+    renderEncyclopediaGrid(filtered);
+}
+
+function filterCategory(cat) {
+    document.querySelectorAll('.category-filter-chips .filter-chip').forEach(c => {
+        c.classList.toggle('active', c.getAttribute('data-cat') === cat);
+    });
+    filterEncyclopedia();
+}
+
+/* =========================================================
+   REPORT PRINTING
+   ========================================================= */
+function printReport() {
+    window.print();
+}
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+function formatBytes(bytes, decimals = 1) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}

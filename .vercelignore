@@ -1,0 +1,14 @@
+PlantVillage/
+uploads/
+*.docx
+train_model.py
+.git/
+.gitignore
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+venv/
+env/
+.pytest_cache/
