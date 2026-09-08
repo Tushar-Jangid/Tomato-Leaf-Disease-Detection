@@ -1,5 +1,5 @@
 /**
- * TomatoDoc AI - Smart Crop Health & Disease Diagnostic System
+ * LeafScan AI - Smart Crop Health & Disease Diagnostic System
  * Client Logic & Analytics Engine
  */
 
@@ -12,7 +12,7 @@ let cameraStream = null;
 let currentHistoryFilter = 'all';
 
 // LocalStorage Key
-const STORAGE_KEY_SCANS = 'tomatodoc_history_v1';
+const STORAGE_KEY_SCANS = 'leafscan_history_v1';
 
 // DOM Ready initialization
 document.addEventListener('DOMContentLoaded', () => {
@@ -428,7 +428,7 @@ function exportHistoryCSV() {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `tomatodoc_history_${Date.now()}.csv`);
+    link.setAttribute('download', `leafscan_history_${Date.now()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
