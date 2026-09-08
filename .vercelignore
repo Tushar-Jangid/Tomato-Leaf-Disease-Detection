@@ -12,3 +12,7 @@ __pycache__/
 venv/
 env/
 .pytest_cache/
+best_model.h5
+templates/
+static/
+app.py
