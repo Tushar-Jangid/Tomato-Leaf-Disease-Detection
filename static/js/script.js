@@ -1,16 +1,18 @@
 /**
- * AgroScan AI - Tomato Disease Detection & Farm Analytics
- * Main Client Logic
+ * TomatoDoc AI - Smart Crop Health & Disease Diagnostic System
+ * Client Logic & Analytics Engine
  */
 
 // Global State
 let currentSelectedFile = null;
 let diseaseChartInstance = null;
+let severityChartInstance = null;
 let encyclopediaData = [];
 let cameraStream = null;
+let currentHistoryFilter = 'all';
 
-// LocalStorage Keys
-const STORAGE_KEY_SCANS = 'agroscan_history_v1';
+// LocalStorage Key
+const STORAGE_KEY_SCANS = 'tomatodoc_history_v1';
 
 // DOM Ready initialization
 document.addEventListener('DOMContentLoaded', () => {
@@ -287,7 +289,7 @@ function renderResults(data) {
     const maxOffset = 264;
     const strokeOffset = maxOffset - (confVal / 100) * maxOffset;
     gaugeFill.style.strokeDashoffset = strokeOffset;
-    gaugeFill.style.stroke = data.is_healthy ? '#10b981' : (sevLower === 'critical' ? '#ef4444' : '#f97316');
+    gaugeFill.style.stroke = data.is_healthy ? '#10b981' : (sevLower === 'critical' ? '#f43f5e' : '#f59e0b');
 
     // Description Banner
     document.getElementById('resDescriptionText').textContent = data.description;
@@ -368,7 +370,6 @@ function saveScanToHistory(data) {
     try {
         let history = JSON.parse(localStorage.getItem(STORAGE_KEY_SCANS) || '[]');
         
-        // Get thumbnail preview if available
         let thumbUrl = '';
         const previewImg = document.getElementById('previewImage');
         if (previewImg && previewImg.src) {
@@ -388,7 +389,7 @@ function saveScanToHistory(data) {
         };
 
         history.unshift(record); // Prepend newest
-        if (history.length > 50) history = history.slice(0, 50); // Cap to 50
+        if (history.length > 60) history = history.slice(0, 60);
 
         localStorage.setItem(STORAGE_KEY_SCANS, JSON.stringify(history));
         updateDashboard();
@@ -406,7 +407,7 @@ function loadScanHistory() {
 }
 
 function clearScanHistory() {
-    if (confirm('Are you sure you want to clear all scan history logs?')) {
+    if (confirm('Are you sure you want to clear all scan history records?')) {
         localStorage.removeItem(STORAGE_KEY_SCANS);
         updateDashboard();
     }
@@ -427,14 +428,14 @@ function exportHistoryCSV() {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `agroscan_history_${Date.now()}.csv`);
+    link.setAttribute('download', `tomatodoc_history_${Date.now()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
 }
 
 /* =========================================================
-   DASHBOARD UPDATE & CHARTS
+   DASHBOARD UPDATE & DUAL CHARTS
    ========================================================= */
 function updateDashboard() {
     const history = loadScanHistory();
@@ -451,12 +452,28 @@ function updateDashboard() {
     const diseasedCountEl = document.getElementById('kpiDiseasedCount');
     const avgConfidenceEl = document.getElementById('kpiAvgConfidence');
 
+    // Biosecurity Banner elements
+    const healthScoreValEl = document.getElementById('bannerHealthScore');
+    const healthPathEl = document.getElementById('bannerHealthPath');
+    const healthTitleEl = document.getElementById('bannerHealthTitle');
+    const healthDescEl = document.getElementById('bannerHealthDesc');
+    const riskStatusEl = document.getElementById('bannerRiskStatus');
+
     if (count === 0) {
         if (totalScansEl) totalScansEl.textContent = '0';
         if (healthyRatioEl) healthyRatioEl.textContent = '0%';
         if (healthyCountEl) healthyCountEl.textContent = '0 healthy plants';
         if (diseasedCountEl) diseasedCountEl.textContent = '0';
         if (avgConfidenceEl) avgConfidenceEl.textContent = '0%';
+
+        if (healthScoreValEl) healthScoreValEl.textContent = '100%';
+        if (healthPathEl) healthPathEl.setAttribute('stroke-dasharray', '100, 100');
+        if (healthTitleEl) healthTitleEl.textContent = 'Crop Biosecurity: Optimal Condition';
+        if (healthDescEl) healthDescEl.textContent = 'No diseased leaves scanned yet. Upload leaf samples to generate live biosecurity analytics.';
+        if (riskStatusEl) {
+            riskStatusEl.textContent = 'Baseline';
+            riskStatusEl.className = 'stat-pill-val text-success';
+        }
     } else {
         const healthyItems = history.filter(h => h.is_healthy);
         const healthyCount = healthyItems.length;
@@ -471,26 +488,73 @@ function updateDashboard() {
         if (healthyCountEl) healthyCountEl.textContent = `${healthyCount} of ${count} healthy`;
         if (diseasedCountEl) diseasedCountEl.textContent = diseasedCount;
         if (avgConfidenceEl) avgConfidenceEl.textContent = `${avgConf}%`;
+
+        // Calculate Biosecurity Score: Penalty for critical/high diseases
+        const criticalCount = history.filter(h => h.severity === 'Critical').length;
+        const highCount = history.filter(h => h.severity === 'High').length;
+        let biosecurityScore = Math.max(10, Math.round(100 - (criticalCount * 25 + highCount * 12 + (diseasedCount - criticalCount - highCount) * 5)));
+        if (healthyRatio === 100) biosecurityScore = 100;
+
+        if (healthScoreValEl) healthScoreValEl.textContent = `${biosecurityScore}%`;
+        if (healthPathEl) {
+            healthPathEl.setAttribute('stroke-dasharray', `${biosecurityScore}, 100`);
+            healthPathEl.style.stroke = biosecurityScore > 75 ? '#10b981' : (biosecurityScore > 50 ? '#f59e0b' : '#f43f5e');
+        }
+
+        if (healthTitleEl && healthDescEl && riskStatusEl) {
+            if (biosecurityScore >= 80) {
+                healthTitleEl.textContent = 'Crop Biosecurity: Optimal Health Index';
+                healthDescEl.textContent = 'Disease prevalence is minimal. Tomato crops demonstrate strong cellular vigor and optimal chlorophyll retention.';
+                riskStatusEl.textContent = 'Low Risk';
+                riskStatusEl.className = 'stat-pill-val text-success';
+            } else if (biosecurityScore >= 50) {
+                healthTitleEl.textContent = 'Crop Biosecurity: Moderate Disease Warning';
+                healthDescEl.textContent = 'Early or moderate fungal lesions detected. Apply preventive copper or neem treatments to arrest spread.';
+                riskStatusEl.textContent = 'Elevated Risk';
+                riskStatusEl.className = 'stat-pill-val text-warning';
+            } else {
+                healthTitleEl.textContent = 'Crop Biosecurity: Critical Outbreak Alert';
+                healthDescEl.textContent = 'High or Critical pathogens (Late Blight / TYLCV) detected. Immediate quarantine and systemic interventions required.';
+                riskStatusEl.textContent = 'Critical Alert';
+                riskStatusEl.className = 'stat-pill-val text-danger';
+            }
+        }
     }
 
     // Render Recent Scans Table
     renderHistoryTable(history);
 
-    // Render Chart.js
+    // Render Both Charts
     renderDiseaseChart(history);
+    renderSeverityChart(history);
+}
+
+function filterHistoryTable(filterType) {
+    currentHistoryFilter = filterType;
+    document.querySelectorAll('.history-filter-chips .filter-pill').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.toLowerCase() === filterType);
+    });
+    renderHistoryTable(loadScanHistory());
 }
 
 function renderHistoryTable(history) {
     const tbody = document.getElementById('historyTableBody');
     if (!tbody) return;
 
-    if (!history.length) {
-        tbody.innerHTML = `<tr><td colspan="7" class="table-empty-td">No scans performed yet. Go to Leaf Scanner to inspect your first leaf!</td></tr>`;
+    let filtered = history;
+    if (currentHistoryFilter === 'healthy') {
+        filtered = history.filter(h => h.is_healthy);
+    } else if (currentHistoryFilter === 'diseased') {
+        filtered = history.filter(h => !h.is_healthy);
+    }
+
+    if (!filtered.length) {
+        tbody.innerHTML = `<tr><td colspan="7" class="table-empty-td">No scans matching filter "${currentHistoryFilter}".</td></tr>`;
         return;
     }
 
     tbody.innerHTML = '';
-    history.slice(0, 15).forEach((record, index) => {
+    filtered.slice(0, 15).forEach((record) => {
         const tr = document.createElement('tr');
         
         const sevClass = record.severity === 'Critical' ? 'badge-severity-critical' :
@@ -529,6 +593,9 @@ function deleteHistoryRecord(id) {
     updateDashboard();
 }
 
+/* =========================================================
+   CHART 1: DISEASE DISTRIBUTION (DONUT)
+   ========================================================= */
 function renderDiseaseChart(history) {
     const canvas = document.getElementById('diseaseChart');
     const emptyMsg = document.getElementById('chartEmptyMsg');
@@ -553,11 +620,10 @@ function renderDiseaseChart(history) {
     const labels = Object.keys(counts);
     const dataValues = Object.values(counts);
 
-    // Color palette for chart
     const colors = [
-        '#10b981', '#3b82f6', '#f97316', '#ef4444', 
-        '#eab308', '#8b5cf6', '#ec4899', '#06b6d4', 
-        '#14b8a6', '#f43f5e'
+        '#10b981', '#3b82f6', '#f59e0b', '#f43f5e', 
+        '#8b5cf6', '#06b6d4', '#ec4899', '#14b8a6', 
+        '#fb923c', '#e11d48'
     ];
 
     if (diseaseChartInstance) {
@@ -573,7 +639,7 @@ function renderDiseaseChart(history) {
                 data: dataValues,
                 backgroundColor: colors.slice(0, labels.length),
                 borderWidth: 2,
-                borderColor: '#121e21'
+                borderColor: '#111a2e'
             }]
         },
         options: {
@@ -585,13 +651,82 @@ function renderDiseaseChart(history) {
                     labels: {
                         color: '#cbd5e1',
                         font: { family: 'Plus Jakarta Sans', size: 11 },
-                        padding: 12,
-                        boxWidth: 12,
-                        boxHeight: 12
+                        padding: 10,
+                        boxWidth: 10,
+                        boxHeight: 10
                     }
                 }
             },
             cutout: '68%'
+        }
+    });
+}
+
+/* =========================================================
+   CHART 2: SEVERITY BREAKDOWN (BAR CHART)
+   ========================================================= */
+function renderSeverityChart(history) {
+    const canvas = document.getElementById('severityChart');
+    const emptyMsg = document.getElementById('severityEmptyMsg');
+    if (!canvas) return;
+
+    if (!history.length) {
+        canvas.style.display = 'none';
+        if (emptyMsg) emptyMsg.style.display = 'block';
+        return;
+    }
+
+    canvas.style.display = 'block';
+    if (emptyMsg) emptyMsg.style.display = 'none';
+
+    // Count severity occurrences
+    let noneCount = 0;
+    let moderateCount = 0;
+    let highCount = 0;
+    let criticalCount = 0;
+
+    history.forEach(item => {
+        const sev = (item.severity || '').toLowerCase();
+        if (sev === 'critical') criticalCount++;
+        else if (sev === 'high') highCount++;
+        else if (sev === 'moderate') moderateCount++;
+        else noneCount++;
+    });
+
+    if (severityChartInstance) {
+        severityChartInstance.destroy();
+    }
+
+    const ctx = canvas.getContext('2d');
+    severityChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Healthy (None)', 'Moderate', 'High', 'Critical'],
+            datasets: [{
+                label: 'Plant Count',
+                data: [noneCount, moderateCount, highCount, criticalCount],
+                backgroundColor: ['#10b981', '#f59e0b', '#fb923c', '#f43f5e'],
+                borderRadius: 6,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans', size: 11 } }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: { color: '#94a3b8', stepSize: 1 }
+                }
+            }
         }
     });
 }

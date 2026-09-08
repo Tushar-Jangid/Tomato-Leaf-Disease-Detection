@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AgroScan AI — Tomato Disease Detection & Farm Health Analytics</title>
+    <title>TomatoDoc AI — Smart Tomato Crop Health & Disease Diagnostic System</title>
     <meta name="description" content="AI-powered tomato plant leaf disease diagnosis system with deep learning CNN model, real-time farm health analytics dashboard, and agronomic treatment encyclopedia.">
     
     <!-- Google Fonts -->
@@ -32,15 +32,15 @@
                         <path d="M11 16C12.5 14 15 14 17 15" stroke="white" stroke-width="1.8" stroke-linecap="round" opacity="0.6"/>
                         <defs>
                             <linearGradient id="tomatoGrad" x1="6" y1="8" x2="26" y2="28" gradientUnits="userSpaceOnUse">
-                                <stop stop-color="#EF4444"/>
-                                <stop offset="1" stop-color="#B91C1C"/>
+                                <stop stop-color="#FF4D4D"/>
+                                <stop offset="1" stop-color="#C51616"/>
                             </linearGradient>
                         </defs>
                     </svg>
                 </div>
                 <div class="brand-text">
-                    <div class="brand-title">AgroScan <span class="badge-ai">AI</span></div>
-                    <div class="brand-subtitle">Tomato Disease Detection & Analytics</div>
+                    <div class="brand-title">TomatoDoc <span class="badge-ai">AI</span></div>
+                    <div class="brand-subtitle">Smart Crop Health & Disease Diagnostic System</div>
                 </div>
             </div>
 
@@ -78,7 +78,7 @@
             <!-- Status Indicator -->
             <div class="nav-status">
                 <span class="status-pulse-dot"></span>
-                <span class="status-text">Model Ready (10 Classes)</span>
+                <span class="status-text">AI Model Active (10 Classes)</span>
             </div>
         </header>
 
@@ -93,10 +93,10 @@
                     <div class="card upload-card">
                         <div class="card-header">
                             <div>
-                                <h2 class="card-title">Upload Tomato Leaf</h2>
-                                <p class="card-desc">Select an image, take a camera snap, or try quick test samples.</p>
+                                <h2 class="card-title">Inspect Tomato Foliage</h2>
+                                <p class="card-desc">Upload leaf image, take camera snapshot, or select quick test samples.</p>
                             </div>
-                            <span class="badge-accent">Deep CNN Powered</span>
+                            <span class="badge-accent">Deep CNN Vision</span>
                         </div>
 
                         <!-- Quick Sample Tester Chips -->
@@ -131,7 +131,7 @@
                                     </svg>
                                 </div>
                                 <h3 class="dropzone-heading">Drag & drop tomato leaf image here</h3>
-                                <p class="dropzone-sub">Supports JPG, JPEG, PNG, WEBP (Max 16MB)</p>
+                                <p class="dropzone-sub">Supports JPG, PNG, WEBP (Max 16MB)</p>
                                 
                                 <div class="dropzone-actions">
                                     <button type="button" class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
@@ -216,7 +216,7 @@
                                 </svg>
                             </div>
                             <h3>Awaiting Leaf Scan</h3>
-                            <p>Upload a tomato leaf photo or choose a sample on the left to see instant disease identification, severity ratings, and treatment plans.</p>
+                            <p>Upload a tomato leaf photo or click a quick sample on the left to see instant condition detection, severity rating, and agronomic treatment guidance.</p>
                             <div class="supported-classes-pill">10 Disease Classes Trained</div>
                         </div>
 
@@ -224,7 +224,7 @@
                         <div class="results-active-state" id="resultsActiveState" style="display: none;">
                             <div class="result-header-row">
                                 <div>
-                                    <div class="result-pretitle">DIAGNOSIS REPORT</div>
+                                    <div class="result-pretitle">CLINICAL DIAGNOSIS REPORT</div>
                                     <h2 class="result-disease-name" id="resDiseaseName">Healthy Tomato Leaf</h2>
                                     <div class="result-badges-row">
                                         <span class="badge-pill" id="resSeverityBadge">Severity: None</span>
@@ -322,8 +322,8 @@
             <section id="dashboard-view" class="tab-view">
                 <div class="dashboard-header-row">
                     <div>
-                        <h1 class="dashboard-title">Farm Health & Disease Analytics</h1>
-                        <p class="dashboard-subtitle">Real-time crop inspection metrics, disease incidence tracking, and seasonal risk alerts.</p>
+                        <h1 class="dashboard-title">Farm Health & Crop Intelligence</h1>
+                        <p class="dashboard-subtitle">Real-time inspection analytics, biosecurity index, multi-disease trends, and climate risk advisories.</p>
                     </div>
                     <div class="dashboard-actions">
                         <button type="button" class="btn btn-outline btn-sm" onclick="exportHistoryCSV()">
@@ -332,11 +332,38 @@
                                 <polyline points="7 10 12 15 17 10"/>
                                 <line x1="12" y1="15" x2="12" y2="3"/>
                             </svg>
-                            Export History
+                            Export CSV
                         </button>
                         <button type="button" class="btn btn-ghost btn-sm text-danger" onclick="clearScanHistory()">
                             Clear History
                         </button>
+                    </div>
+                </div>
+
+                <!-- Farm Health Biosecurity Banner & Score -->
+                <div class="farm-health-banner">
+                    <div class="banner-left">
+                        <div class="health-gauge-mini">
+                            <svg class="health-mini-svg" viewBox="0 0 36 36">
+                                <path class="circle-bg-mini" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path class="circle-fill-mini" id="bannerHealthPath" stroke-dasharray="100, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            </svg>
+                            <span class="health-score-val" id="bannerHealthScore">100%</span>
+                        </div>
+                        <div class="banner-text">
+                            <h3 id="bannerHealthTitle">Crop Biosecurity: Optimal Condition</h3>
+                            <p id="bannerHealthDesc">No critical disease outbreaks detected in current crop inspections. Continue standard preventive monitoring.</p>
+                        </div>
+                    </div>
+                    <div class="banner-stats-pills">
+                        <div class="stat-pill">
+                            <span class="stat-pill-label">Risk Status</span>
+                            <span class="stat-pill-val text-success" id="bannerRiskStatus">Low Risk</span>
+                        </div>
+                        <div class="stat-pill">
+                            <span class="stat-pill-label">Inspection Integrity</span>
+                            <span class="stat-pill-val">High (AI Verified)</span>
+                        </div>
                     </div>
                 </div>
 
@@ -351,7 +378,7 @@
                         <div class="kpi-info">
                             <span class="kpi-label">Total Leaves Scanned</span>
                             <h3 class="kpi-value" id="kpiTotalScans">0</h3>
-                            <span class="kpi-subtext">All sessions logged</span>
+                            <span class="kpi-subtext">Cumulative inspections</span>
                         </div>
                     </div>
 
@@ -362,7 +389,7 @@
                             </svg>
                         </div>
                         <div class="kpi-info">
-                            <span class="kpi-label">Healthy Crop Ratio</span>
+                            <span class="kpi-label">Healthy Plant Ratio</span>
                             <h3 class="kpi-value text-success" id="kpiHealthyRatio">0%</h3>
                             <span class="kpi-subtext" id="kpiHealthyCount">0 healthy plants</span>
                         </div>
@@ -377,9 +404,9 @@
                             </svg>
                         </div>
                         <div class="kpi-info">
-                            <span class="kpi-label">Active Disease Outbreaks</span>
+                            <span class="kpi-label">Pathogen Outbreaks</span>
                             <h3 class="kpi-value text-danger" id="kpiDiseasedCount">0</h3>
-                            <span class="kpi-subtext">Diseases detected</span>
+                            <span class="kpi-subtext">Active infection cases</span>
                         </div>
                     </div>
 
@@ -391,20 +418,20 @@
                             </svg>
                         </div>
                         <div class="kpi-info">
-                            <span class="kpi-label">Avg AI Confidence</span>
+                            <span class="kpi-label">Mean Confidence</span>
                             <h3 class="kpi-value" id="kpiAvgConfidence">0%</h3>
-                            <span class="kpi-subtext">Diagnosis accuracy metric</span>
+                            <span class="kpi-subtext">Model certainty rating</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Charts & Risk Row -->
+                <!-- Dual Visualizations Grid (Doughnut + Bar Chart) -->
                 <div class="dashboard-analytics-grid">
-                    <!-- Left: Disease Distribution Chart -->
+                    <!-- Left: Disease Distribution Donut Chart -->
                     <div class="card chart-card">
                         <div class="card-header">
                             <div>
-                                <h3 class="card-title">Disease Distribution Incidence</h3>
+                                <h3 class="card-title">Disease Distribution</h3>
                                 <p class="card-desc">Visual breakdown of conditions diagnosed in your tomato crops.</p>
                             </div>
                         </div>
@@ -416,12 +443,76 @@
                         </div>
                     </div>
 
-                    <!-- Right: Seasonal Risk & Weather Advisory -->
+                    <!-- Right: Severity Level Breakdown Bar Chart -->
+                    <div class="card chart-card">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Severity Severity Profile</h3>
+                                <p class="card-desc">Critical vs. High vs. Moderate vs. Healthy plant counts.</p>
+                            </div>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="severityChart"></canvas>
+                        </div>
+                        <div class="chart-empty-msg" id="severityEmptyMsg" style="display: none;">
+                            Scan leaves to visualize severity distribution.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Environmental Microclimate & Seasonal Advisories Row -->
+                <div class="dashboard-analytics-grid">
+                    <!-- Left: Microclimate Simulation Cards -->
+                    <div class="card climate-card">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Microclimate Disease Pressure</h3>
+                                <p class="card-desc">Current ambient condition impact on pathogen propagation.</p>
+                            </div>
+                            <span class="badge-pill badge-neutral">Field Sensors</span>
+                        </div>
+                        <div class="climate-grid">
+                            <div class="climate-item">
+                                <div class="climate-icon-wrap">🌡️</div>
+                                <div class="climate-data">
+                                    <span class="climate-label">Ambient Temp</span>
+                                    <span class="climate-val">23.5 °C</span>
+                                    <span class="climate-status text-success">Optimal Growth</span>
+                                </div>
+                            </div>
+                            <div class="climate-item">
+                                <div class="climate-icon-wrap">💧</div>
+                                <div class="climate-data">
+                                    <span class="climate-label">Rel. Humidity</span>
+                                    <span class="climate-val">82 %</span>
+                                    <span class="climate-status text-warning">High (Blight Warning)</span>
+                                </div>
+                            </div>
+                            <div class="climate-item">
+                                <div class="climate-icon-wrap">🍃</div>
+                                <div class="climate-data">
+                                    <span class="climate-label">Leaf Wetness</span>
+                                    <span class="climate-val">4.2 hrs</span>
+                                    <span class="climate-status text-warning">Spore Germination Risk</span>
+                                </div>
+                            </div>
+                            <div class="climate-item">
+                                <div class="climate-icon-wrap">🪰</div>
+                                <div class="climate-data">
+                                    <span class="climate-label">Vector Activity</span>
+                                    <span class="climate-val">Moderate</span>
+                                    <span class="climate-status">Whiteflies Active</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Seasonal Agronomic Risk Advisories -->
                     <div class="card advisory-card">
                         <div class="card-header">
                             <div>
                                 <h3 class="card-title">Agronomic Risk Advisories</h3>
-                                <p class="card-desc">Current seasonal vulnerability & preventive management guide.</p>
+                                <p class="card-desc">Weather-correlated pathogen alerts and management guidance.</p>
                             </div>
                         </div>
                         <div class="advisory-items-list">
@@ -429,21 +520,21 @@
                                 <div class="advisory-badge badge-high">High Risk</div>
                                 <div class="advisory-body">
                                     <h4>Late Blight (Phytophthora)</h4>
-                                    <p>High humidity (>80%) and wet leaves encourage rapid zoospore germination. Apply preventive copper spray prior to rainy spells.</p>
+                                    <p>Wet canopy and high humidity trigger swimming zoospores. Apply protective copper fungicide prior to predicted rain.</p>
                                 </div>
                             </div>
                             <div class="advisory-item item-medium">
-                                <div class="advisory-badge badge-medium">Moderate Risk</div>
+                                <div class="advisory-badge badge-medium">Moderate</div>
                                 <div class="advisory-body">
                                     <h4>Early Blight & Septoria Spot</h4>
-                                    <p>Soil splash from heavy showers spreads fungal spores to bottom leaves. Mulch plants and prune lower 12 inches of foliage.</p>
+                                    <p>Raindrop splash spreads soil-borne spores to lower leaves. Prune lower 12 inches of foliage and maintain thick straw mulch.</p>
                                 </div>
                             </div>
                             <div class="advisory-item item-low">
                                 <div class="advisory-badge badge-low">Vector Alert</div>
                                 <div class="advisory-body">
                                     <h4>Whiteflies & Spider Mites</h4>
-                                    <p>Dry, sunny spells cause whitefly populations to surge, vectoring Yellow Leaf Curl Virus. Deploy yellow sticky cards immediately.</p>
+                                    <p>Dry sunny periods foster whitefly population explosions that spread Yellow Leaf Curl Virus. Hang yellow sticky cards.</p>
                                 </div>
                             </div>
                         </div>
@@ -454,8 +545,13 @@
                 <div class="card history-card">
                     <div class="card-header">
                         <div>
-                            <h3 class="card-title">Recent Inspection Log</h3>
+                            <h3 class="card-title">Inspection Log & History</h3>
                             <p class="card-desc">Audit trail of individual plant health scans with diagnosis history.</p>
+                        </div>
+                        <div class="history-filter-chips">
+                            <button type="button" class="filter-pill active" onclick="filterHistoryTable('all')">All</button>
+                            <button type="button" class="filter-pill" onclick="filterHistoryTable('healthy')">Healthy</button>
+                            <button type="button" class="filter-pill" onclick="filterHistoryTable('diseased')">Diseased</button>
                         </div>
                     </div>
                     <div class="table-responsive">
@@ -488,7 +584,7 @@
                 <div class="encyclopedia-header">
                     <div>
                         <h1 class="dashboard-title">Tomato Disease Encyclopedia</h1>
-                        <p class="dashboard-subtitle">Comprehensive guide on all 10 tomato leaf conditions, pathogens, symptoms, and agronomic management.</p>
+                        <p class="dashboard-subtitle">Comprehensive field guide on all 10 tomato leaf conditions, pathogens, symptoms, and agronomic management.</p>
                     </div>
                     <!-- Search & Filter Controls -->
                     <div class="encyclopedia-search-bar">
@@ -539,22 +635,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Footer -->
-        <footer class="app-footer">
-            <div class="footer-inner">
-                <div class="footer-left">
-                    <span class="footer-brand">AgroScan AI</span>
-                    <span class="footer-dot">•</span>
-                    <span>Deep Learning Plant Village Model</span>
-                    <span class="footer-dot">•</span>
-                    <span class="footer-badge-vercel">Vercel Ready</span>
-                </div>
-                <div class="footer-right">
-                    <span>Designed for Precision Agriculture</span>
-                </div>
-            </div>
-        </footer>
     </div>
 
     <!-- Script -->
