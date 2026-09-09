@@ -1,4 +1,15 @@
+---
+title: Tomato Leaf Disease Detection
+emoji: 🍅
+colorFrom: green
+colorTo: red
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # 🍅 Tomato Leaf Disease Detection System
+
 
 [![Python 3.11](https://img.shields.io/badge/Python-3.11.9-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Flask-3.1-black?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
